@@ -264,6 +264,12 @@ class PlayState extends MusicBeatState
 	public var startCallback:Void->Void = null;
 	public var endCallback:Void->Void = null;
 
+	private var ratingText:FlxText;
+	public var sicks:Int;
+	public var goods:Int;
+	public var bads:Int;
+	public var shits:Int;
+
 	override public function create()
 	{
 		//trace('Playback Rate: ' + playbackRate);
@@ -571,6 +577,13 @@ class PlayState extends MusicBeatState
 		noteGroup.cameras = [camHUD];
 		comboGroup.cameras = [camHUD];
 
+		ratingText = new FlxText(0, FlxG.height / 2, 0, '', 30);
+		ratingText.setFormat(Paths.font("vcr.ttf"), 40, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		ratingText.visible = !ClientPrefs.data.hideHud;
+		ratingText.borderSize = 1.25;
+		ratingText.scrollFactor.set();
+		uiGroup.add(ratingText);
+		
 		startingSong = true;
 
 		#if LUA_ALLOWED
@@ -1139,10 +1152,10 @@ class PlayState extends MusicBeatState
 
 	public dynamic function fullComboFunction()
 	{
-		var sicks:Int = ratingsData[0].hits;
-		var goods:Int = ratingsData[1].hits;
-		var bads:Int = ratingsData[2].hits;
-		var shits:Int = ratingsData[3].hits;
+		sicks = ratingsData[0].hits;
+		goods = ratingsData[1].hits;
+		bads = ratingsData[2].hits;
+		shits = ratingsData[3].hits;
 
 		ratingFC = "";
 		if(songMisses == 0)
@@ -1642,6 +1655,14 @@ class PlayState extends MusicBeatState
 
 		super.update(elapsed);
 
+		var tempRating:String = 
+		'Sicks: $sicks\n'+
+		'Goods: $goods\n'+
+		'Bads: $bads\n'+
+		'Shits $shits';
+
+		ratingText.text = '${tempRating}\n';
+
 		setOnScripts('curDecStep', curDecStep);
 		setOnScripts('curDecBeat', curDecBeat);
 
@@ -1706,6 +1727,11 @@ class PlayState extends MusicBeatState
 		FlxG.watch.addQuick("secShit", curSection);
 		FlxG.watch.addQuick("beatShit", curBeat);
 		FlxG.watch.addQuick("stepShit", curStep);
+
+		for (rating in ratingsData){
+			var ratingsTypes:Array<String> = ['sick', 'good', 'bad', 'shit'];
+			FlxG.watch.addQuick(ratingsTypes[ratingsData.indexOf(rating)] , rating.hits);
+		}
 
 		// RESET = Quick Game Over Screen
 		if (!ClientPrefs.data.noReset && controls.RESET && canReset && !inCutscene && startedCountdown && !endingSong)
